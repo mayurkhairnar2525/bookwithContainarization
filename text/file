@@ -1,0 +1,56 @@
+version: "3"
+services:
+  database:
+    image: mysql
+    restart: always
+    ports :
+     - "9999:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "12345678"
+      MYSQL_DATABASE: "bookcount"
+      MYSQL_PASSWORD: "12345678"
+      MYSQL_HOST : "127.0.0.1"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  book-application:  # Image name
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+        - "8080:8081"
+volumes:
+  mysql-data:
+    driver: local
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    FROM golang:latest
+    LABEL maintainer ="Quique<mayurkhairnar325@gmail.com"
+    WORKDIR /app
+    COPY go.mod .
+    COPY go.sum .
+    COPY . .
+    ENV MYSQL_ROOT_PASSWORD: "12345678"
+    RUN go build
+    CMD ["./containerization"]
+
+
+
