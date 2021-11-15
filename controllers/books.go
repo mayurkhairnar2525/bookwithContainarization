@@ -1,28 +1,22 @@
 package controllers
 
 import (
-	"containerization/auth"
 	"containerization/models"
-	_ "containerization/repository/book"
 	book2 "containerization/repository/book"
 	"containerization/utils"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type Controllers struct{}
 
 var books []models.BookManagement
-
-var JwtKey = []byte("secretKey")
 
 func (c Controllers) GetBooks(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +47,6 @@ func (c Controllers) CreateBook(db *sql.DB) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&book)
 
 		v := validator.New()
-
 		if err = v.Struct(book); err != nil {
 			fmt.Println(err)
 			return
@@ -158,44 +151,4 @@ func (c Controllers) DeleteBook(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/plain")
 		utils.SendSuccess(w, rowsDeleted)
 	}
-}
-
-func (c Controllers) Login(w http.ResponseWriter, request *http.Request) {
-	var credentials models.Credentials
-	err := json.NewDecoder(request.Body).Decode(&credentials)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	v := validator.New()
-	if err = v.Struct(credentials); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	expectedPassword, ok := auth.USers[credentials.Username]
-	if !ok || expectedPassword != credentials.Password {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	expirationTime := time.Now().Add(time.Minute * 5)
-	claims := &models.Claims{
-		Username: credentials.Username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(JwtKey)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	http.SetCookie(w,
-		&http.Cookie{
-			Name:    "token",
-			Value:   tokenString,
-			Expires: expirationTime,
-		})
-	log.Println("user successfully logged in")
-
 }

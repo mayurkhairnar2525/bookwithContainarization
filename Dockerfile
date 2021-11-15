@@ -10,3 +10,6 @@ CMD ["./containerization"]
 
 
 
+#RUN go build
+# RUN go build -o main./cmd
+

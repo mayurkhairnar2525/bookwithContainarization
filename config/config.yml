@@ -7,3 +7,5 @@ db:   #database service
   dbname : "bookcount"
 key:
   jwtKey: "secretKey"
+bookrepo:
+  port : ":9099"

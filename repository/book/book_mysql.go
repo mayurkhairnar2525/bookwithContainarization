@@ -1,6 +1,5 @@
 package book
 
-import "C"
 import (
 	"containerization/driver"
 	"containerization/models"

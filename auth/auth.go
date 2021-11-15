@@ -2,16 +2,18 @@ package auth
 
 import (
 	"containerization/models"
+	vipers "containerization/viper"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 )
 
-var JwtKey = []byte("secretKey")
+var tokenStore = make(map[string]string)
+
+var jwtKey = vipers.GetJwtKey()
 
 var USers = map[string]string{
 	"mayur": "password1",
-	"user2": "password2",
 }
 
 func IsAuthorised(endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -26,7 +28,7 @@ func IsAuthorised(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 		claims := &models.Claims{}
 		tkn, err := jwt.ParseWithClaims(tokenStr, claims,
 			func(t *jwt.Token) (interface{}, error) {
-				return JwtKey, nil
+				return jwtKey, nil
 			})
 		if err != nil {
 			log.Fatal("err", err)

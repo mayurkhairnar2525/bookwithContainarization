@@ -21,9 +21,6 @@ func GetDbconfigs() (DbConfig, error) {
 	v.SetConfigName("config") // config file name
 	v.SetConfigType("yaml")
 	v.AddConfigPath("./config") // config file path
-	v.AddConfigPath("../config")
-	v.AddConfigPath("../../config")
-	v.AddConfigPath(".")
 	err := v.ReadInConfig()
 	if err != nil {
 		return DbConfig{}, err
@@ -45,3 +42,49 @@ func GetDbconfigs() (DbConfig, error) {
 		DbName:     dbname,
 	}, nil
 }
+
+func GetJwtKey() (key []byte) {
+	log.Println("fetching jwt-key configs")
+	v := viper.New()
+	v.SetConfigName("config") // config file name
+	v.SetConfigType("yaml")
+	v.AddConfigPath("./config") // config file path
+
+	err := v.ReadInConfig()
+	if err != nil {
+		log.Fatal("unable to fetch jwtKey err :", err.Error())
+	}
+	key = []byte(v.GetString("key.jwtKey"))
+	return key
+}
+
+func GetPort() (port string) {
+	log.Println("fetching port configs")
+	v := viper.New()
+	v.SetConfigName("config") // config file name
+	v.SetConfigType("yaml")
+	v.AddConfigPath("./config") // config file path
+
+	err := v.ReadInConfig()
+	if err != nil {
+		log.Fatal("Unable to fetch port")
+	}
+	port = v.GetString("bookrepo.port")
+	return port
+}
+
+//func GetCookieExpiryTime() (CookieTime time.Duration) {
+//	log.Println("fetching Cookie configs")
+//	v := viper.New()
+//	v.SetConfigName("config") // config file name
+//	v.SetConfigType("yaml")
+//	v.AddConfigPath("./config") // config file path
+//
+//	err := v.ReadInConfig()
+//	if err != nil {
+//		log.Fatal("Unable to fetch Cookie:")
+//	}
+//	//CookieExpiryDuration := CookieTime
+//	CookieTime = v.GetDuration("expirytime.cookieexpirytime")
+//	return CookieTime
+//}

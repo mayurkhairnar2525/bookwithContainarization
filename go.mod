@@ -10,7 +10,8 @@ require (
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.9.0
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359 // indirect
+	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
+	golang.org/x/sys v0.0.0-20211113001501-0c823b97ae02 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/ini.v1 v1.64.0 // indirect
 )

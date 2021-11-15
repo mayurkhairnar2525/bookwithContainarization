@@ -3,15 +3,15 @@ package models
 import "github.com/dgrijalva/jwt-go"
 
 type BookManagement struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	Author       string `json:"author"`
-	Prices       int    `json:"prices"`
-	Available    string `json:"available"`
-	PageQuality  string `json:"pagequality"`
-	LaunchedYear string `json:"launchedyear"`
-	Isbn         string `json:"isbn"`
-	Stock        int    `json:"stock"`
+	ID           int    `json:"id" validate:"min=0,max=130"`
+	Name         string `json:"name" validator:"nonzero"`
+	Author       string `json:"author"Validate:"empty=true | gte=2 & lte=15"`
+	Prices       int    `json:"prices" validator:"nonzero"`
+	Available    string `json:"available" validator:"nonzero"`
+	PageQuality  string `json:"pagequality" validator:"nonzero"`
+	LaunchedYear string `json:"launchedyear" validator:"empty=true | gte=2 & lte=4"`
+	Isbn         string `json:"isbn" validator:"min=21"`
+	Stock        int    `json:"stock" validator:"nonzero"`
 }
 
 type Credentials struct {

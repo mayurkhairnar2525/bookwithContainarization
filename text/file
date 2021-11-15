@@ -1,56 +1,77 @@
-version: "3"
-services:
-  database:
-    image: mysql
-    restart: always
-    ports :
-     - "9999:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: "12345678"
-      MYSQL_DATABASE: "bookcount"
-      MYSQL_PASSWORD: "12345678"
-      MYSQL_HOST : "127.0.0.1"
-    volumes:
-      - mysql-data:/var/lib/mysql
+Comments yet to be implemented:
 
-  book-application:  # Image name
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-        - "8080:8081"
-volumes:
-  mysql-data:
-    driver: local
+1. Keep id as internal field and not expose it. Perform search by other columns. This should be implemented in the GET method using query params.
+Example, as per the query params given in the URL:
+Fetch details of all books that have the same author
+Fetch book with ISBN
+Fetch all books within given price range
+Use a single GET endpoint to fetch books with the filters applied. This can respond with one or more books that match the filters provided.
 
+2. Implement all the handler functions as methods of a type that wraps the DB instance on server start. Access the wrapped DB instance for
+   calling DB functions to perform DB operations.
 
+3. Separate out the router to its own package and register endpoints in that package. Thus main() will ONLY be responsible to initialise the packages and
+start the server.
 
+4. Create response structs with JSON struct field tags and send response from the handlers.
 
+New comments: Config file:
 
+1. config file should be provided explicitly on server/application start. If not provided, ONLY then take default config file.
+Default config file should not be taken as default always, as is done currently.
 
+2. Why are there multiple config paths?[AddConfigPath] As this default config is static, the config path should always be fixed.
 
+3. config file entries should be mapped automatically to a Config struct. Currently, this is done by manually taking specific entries which defeats
+the purpose of using config file.
+Moreover, when new configurations are added, these need to be handled manually which is not possible when dealing with large config files.
 
+4. Server start port should be supplied in the config file
 
+5. JWT secret must be taken from the config and not hardcoded in code.
 
+6. Cookie expiration time should be taken from config.
 
+Code refactor:
+1. Router registrations should be separated out in its own package, outside main. Every package should have its own responsibility
+which will reflected by the package name. This helps is abstraction & decoupling.
+main() should ONLY contain calls to utility functions that have their own logic(register router, connect to DB, etc.).
+Thus main package will only be responsible to properly start server.
+[PREVIOUS COMMENT]
 
+2. Why are imports duplicated? Check controllers package.
 
+Functional:
+1. Controller struct should wrap all dependencies. This includes DB connection as well.
+Arguments to controllers can be http request/response object at most.
 
+2. illAttaching middleware to common route path w make sure that that middleware is triggered for all sub-paths also. No need to add middleware for sub-paths.
+For example:
+if a middleware is attached to /customer path, then this middleware should get activated when sub-paths(/customer/activity, /customer/account/general) are hit.
+Refer to api-gateway implementation of middlewares for Jual project.
 
+3. Create separate controller package for user management. This can contain handlers for register new user, login user, etc.
 
+4. There should be a separate `users` DB table, preferably in a separate database. This should have its own repository functions for users,
+that is ONLY responsible to make underlying DB calls to operate on the DB(like it is done in repository/book/book_mysql.go)
 
+5. Why are repository methods creating new DB connections? Why are repository instances created multiple times in the handler?
+While registering the handlers, the struct should wrap the respective repository packages and these should be initiated via a constructor.
 
+6. What is the purpose of send an instance of book when the same is returned from repository methods.
+Example: GetBooks() is returning a slice of books which is being sent as arguments to this function.
 
+7. ID should be an internal, primary field & NEVER EXPOSED. This should NOT be taken as input nor used for any DB CRUD operations.
+Instead, use a separate identifier that can be exposed. ISBN can be used as this uniquely identifies a book.
+[PREVIOUS COMMENT]
 
-    FROM golang:latest
-    LABEL maintainer ="Quique<mayurkhairnar325@gmail.com"
-    WORKDIR /app
-    COPY go.mod .
-    COPY go.sum .
-    COPY . .
-    ENV MYSQL_ROOT_PASSWORD: "12345678"
-    RUN go build
-    CMD ["./containerization"]
+8. What are the required fields for creating/inserting a new book? Where are the fields being validated when incoming from the request payload?
+[VALIDATOR SHOULD HAVE BEEN USED HERE, AS DISCUSSED PREVIOUSLY AND SHARED A DEMO LINK(https://play.golang.org/p/PNdq9_gYBnV)]
 
+9. Single GET HTTP endpoint with filters yet to be implemented. Hint was to use query params.
+[PREVIOUS COMMENT]
 
-
+Docker:
+1. The build command will generate a binary but when the container is created, this application will not start as the CMD is for a different binary.
+Either specify the binary during building it in the Dockerfile, or use the generic golang binary.
+This will NOT create the application image.

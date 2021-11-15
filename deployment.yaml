@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container-deployment  # Name of the app, For the microservice architecture this should be named of the microservice
+spec:
+  selector:
+    matchLabels:
+      app: container
+  replicas: 5 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: container
+    spec:
+      imagePullSecrets:
+        - name : my-registry-key
+      containers:
+        - name: container
+          image: mayurk55/bookwithcontainarization_book-application #DockerID- mayurkhairnar55  #Name of the particular image - bookwithcontainarization_book-application
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+
+---  #
+# https://kubernetes.io/docs/concepts/services-networking/service/#defining-a-service
+kind: Service
+apiVersion: v1
+metadata:
+  name: container-deployment  # Name of the service
+spec:
+  selector:
+    app: container # app Name
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 31000
+  type: NodePort
