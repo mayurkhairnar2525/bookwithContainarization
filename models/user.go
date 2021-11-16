@@ -1,13 +1,13 @@
 package models
 
 type Person struct {
-	Username  string `json:"username" validate:"required"`
-	Password  string `json:"password" validate:"required"`
-	Firstname string `json:"firstname" validate:"required"`
-	Lastname  string `json:"lastname" validate:"required"`
-	Age       int    `json:"age" validate:"min=0,max=130,required"`
-	Gender    string `json:"gender" validate:"oneof=male female"`
-	City      string `json:"city" validate:"required"`
+	Username  string `json:"username" validate:"min=0"`
+	Password  string `json:"password" validate:"min=0,max=15"`
+	Firstname string `json:"firstname" validate:"min=0,max=15"`
+	Lastname  string `json:"lastname" validate:"min=0,max=15"`
+	Age       int    `json:"age" validate:"min=0,max=130"`
+	Gender    string `json:"gender" validate:"min=0,max=15"`
+	City      string `json:"city" validate:"min=0,max=15"`
 	Country   string `json:"country,omitempty"`
-	Phone     string `json:"phone" validate:"len=10,numeric"`
+	Phone     string `json:"phone" validate:"min=0,max=10"`
 }

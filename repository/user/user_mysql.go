@@ -1,46 +1,48 @@
 package user
 
 import (
+	"containerization/driver"
 	"containerization/models"
-	"errors"
-	"fmt"
-	"github.com/jmoiron/sqlx"
+	"log"
 )
 
-type Register interface {
-	AddUser(user models.Person) error
-	userAlreadyExists(username string) bool
+type UserRepository struct{}
+
+func (u UserRepository) CreateUser(user models.Person) (string, error) {
+	datastore, _ := driver.ConnectDB()
+	err := datastore.Db.QueryRow("INSERT INTO user(username,password,firstname,lastname,age,gender,city,country,phone) VALUES(?,?,?,?,?,?,?,?,?)", user.Username,
+		user.Password, user.Firstname, user.Lastname, user.Age, user.Gender, user.City, user.Country, user.Phone)
+	if err == nil {
+		log.Println("err occurred", err)
+	}
+	return user.Username, nil
 }
 
-var alreadyExistsError = "user is already present please choose another username"
-
-type DataStore struct {
-	Db *sqlx.DB
+func (u UserRepository) GetUsers(user models.Person, users []models.Person) ([]models.Person, error) {
+	datastore, _ := driver.ConnectDB()
+	result, err := datastore.Db.Query("SELECT username,password,firstname,lastname,age,gender,city,country,phone from user")
+	if err != nil {
+		log.Println("err", err)
+	}
+	for result.Next() {
+		err = result.Scan(&user.Username, &user.Password, &user.Firstname, &user.Lastname, &user.Age, &user.Gender, &user.City, &user.Country, &user.Phone)
+		users = append(users, user)
+	}
+	if err != nil {
+		log.Println("err:", err)
+	}
+	return users, nil
 }
 
-//AddUser will register user's details in userRepository table and return error if occurs
-func (repository DataStore) AddUser(p *models.Person) error {
-
-	if repository.userAlreadyExists(p.Username) {
-		return errors.New(fmt.Sprintf("%s %s", p.Username, alreadyExistsError))
+func (u UserRepository) DeleteUser(username string) (string, error) {
+	datastore, _ := driver.ConnectDB()
+	result, err := datastore.Db.Exec("DELETE FROM user WHERE username  = ?", username)
+	if err != nil {
+		return string(0), err
 	}
-	query := `INSERT INTO user (username,password,firstname,lastname,age,gender,city,country,phone) VALUES
-			(?,?,?,?,?,?,?,?,?)`
-	//insert user's registration details into userRepository
-	_, err := repository.Db.Exec(query, p.Username, p.Password, p.Firstname, p.Lastname, p.Age, p.Gender, p.City, p.Country, p.Phone)
-	return err
-}
-
-//userAlreadyExists checks if user already present or not
-func (repository DataStore) userAlreadyExists(username string) bool {
-	query := `SELECT username FROM user WHERE username =?`
-	var returnedUser string
-	err := repository.Db.QueryRowx(query, username).Scan(&returnedUser)
-	if err != nil && returnedUser == "" {
-		return false
+	rowsDeleted, err := result.RowsAffected()
+	if err != nil {
+		return string(0), err
 	}
-	if username == returnedUser {
-		return true
-	}
-	return false
+	return string(rowsDeleted), nil
 }

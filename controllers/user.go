@@ -3,23 +3,28 @@ package controllers
 import (
 	"containerization/auth"
 	"containerization/models"
+	. "containerization/repository/user"
+	"containerization/utils"
 	vipers "containerization/viper"
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"time"
 )
 
-var JwtKey = vipers.GetJwtKey()
-
-func newUser() *models.Person {
-	return &models.Person{}
+type Controllers struct {
+	Repository UserRepository
 }
 
-func (c Controllers) Login(w http.ResponseWriter, request *http.Request) {
+var userss []models.Person
+
+var JwtKey = vipers.GetJwtKey()
+
+func (u Controllers) Login(w http.ResponseWriter, request *http.Request) {
 	var credentials models.Credentials
 	err := json.NewDecoder(request.Body).Decode(&credentials)
 	if err != nil {
@@ -59,20 +64,66 @@ func (c Controllers) Login(w http.ResponseWriter, request *http.Request) {
 	log.Println("user successfully logged in")
 }
 
-func (c Controllers) Registration(w http.ResponseWriter, req *http.Request) {
-	log.Println("new user registering to the system")
+func (u Controllers) CreateUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user models.Person
+		var userUsername string
+		var error models.Error
+		err := json.NewDecoder(r.Body).Decode(&user)
 
-	w.Header().Set("Content-Type", "application/json")
-	if req.Body == nil {
-		fmt.Fprintln(w, "nil body passed")
-		return
+		v := validator.New()
+		if err = v.Struct(user); err != nil {
+			fmt.Println(err)
+			return
+		}
+		userRepo := UserRepository{}
+		userUsername, err = userRepo.CreateUser(user)
+		if err != nil {
+			error.Message = "Server error"
+			utils.SendError(w, http.StatusInternalServerError, error) //500
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		utils.SendSuccess(w, userUsername)
 	}
-	person := newUser()                              //initialize the person
-	err := json.NewDecoder(req.Body).Decode(&person) //Decode person from json
-	if err != nil {
-		fmt.Fprintln(w, err.Error())
-		return
+}
+
+func (u Controllers) GetUsers() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user models.Person
+		userss = []models.Person{}
+		userRepo := UserRepository{}
+		users, err := userRepo.GetUsers(user, userss)
+
+		v := validator.New()
+		if err = v.Struct(user); err != nil {
+			fmt.Println(err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(users)
+		if err != nil {
+			log.Println("err", err)
+			return
+		}
 	}
-	fmt.Fprint(w, "new user registered successfully")
-	log.Println("new user registered successfully")
+}
+
+func (u Controllers) DeleteUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user models.Person
+		params := mux.Vars(r)
+		userRepo := UserRepository{}
+		username, _ := params["username"]
+		rowsDeleted, err := userRepo.DeleteUser(username)
+		v := validator.New()
+
+		if err = v.Struct(user); err != nil {
+			fmt.Println(err)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		utils.SendSuccess(w, rowsDeleted)
+		fmt.Fprint(w, "new user Deleted successfully")
+	}
 }

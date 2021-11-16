@@ -4,7 +4,6 @@ import (
 	"containerization/models"
 	book2 "containerization/repository/book"
 	"containerization/utils"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -14,16 +13,13 @@ import (
 	"strconv"
 )
 
-type Controllers struct{}
-
 var books []models.BookManagement
 
-func (c Controllers) GetBooks(db *sql.DB) http.HandlerFunc {
+func (u Controllers) GetBooks() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
-		books = []models.BookManagement{}
 		bookRepo := book2.BookRepository{}
-		books, err := bookRepo.GetBooks(db, book, books)
+		books, err := bookRepo.GetBooks(book, books)
 
 		v := validator.New()
 		if err = v.Struct(book); err != nil {
@@ -39,7 +35,7 @@ func (c Controllers) GetBooks(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controllers) CreateBook(db *sql.DB) http.HandlerFunc {
+func (u Controllers) CreateBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
 		var bookID int
@@ -52,7 +48,7 @@ func (c Controllers) CreateBook(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		bookRepo := book2.BookRepository{}
-		bookID, err = bookRepo.CreateBook(db, book)
+		bookID, err = bookRepo.CreateBook(book)
 		if err != nil {
 			error.Message = "Server error"
 			utils.SendError(w, http.StatusInternalServerError, error) //500
@@ -63,7 +59,7 @@ func (c Controllers) CreateBook(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controllers) GetBookById(db *sql.DB) http.HandlerFunc {
+func (u Controllers) GetBookById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
 		params := mux.Vars(r)
@@ -71,7 +67,7 @@ func (c Controllers) GetBookById(db *sql.DB) http.HandlerFunc {
 		bookRepo := book2.BookRepository{}
 
 		id, _ := strconv.Atoi(params["id"])
-		book, err := bookRepo.GetBookById(db, book, id)
+		book, err := bookRepo.GetBookById(book, id)
 
 		v := validator.New()
 		if err = v.Struct(book); err != nil {
@@ -83,14 +79,14 @@ func (c Controllers) GetBookById(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controllers) GetBookByAuthor(db *sql.DB) http.HandlerFunc {
+func (u Controllers) GetBookByAuthor() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
 		params := mux.Vars(r)
 		bookRepo := book2.BookRepository{}
 
 		author, _ := params["author"]
-		book, err := bookRepo.GetBookByAuthor(db, book, author)
+		book, err := bookRepo.GetBookByAuthor(book, author)
 		v := validator.New()
 		if err = v.Struct(book); err != nil {
 			fmt.Println(err)
@@ -102,7 +98,7 @@ func (c Controllers) GetBookByAuthor(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controllers) UpdateBook(db *sql.DB) http.HandlerFunc {
+func (u Controllers) UpdateBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
 		var error models.Error
@@ -119,7 +115,7 @@ func (c Controllers) UpdateBook(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		bookRepo := book2.BookRepository{}
-		rowsUpdated, err := bookRepo.UpdateBook(db, book)
+		rowsUpdated, err := bookRepo.UpdateBook(book)
 		if err != nil {
 			error.Message = "Server error"
 			utils.SendError(w, http.StatusInternalServerError, error) //500
@@ -130,18 +126,13 @@ func (c Controllers) UpdateBook(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controllers) DeleteBook(db *sql.DB) http.HandlerFunc {
+func (u Controllers) DeleteBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
-		//	var error models.Error
 		params := mux.Vars(r)
 		bookRepo := book2.BookRepository{}
-		id, err := strconv.Atoi(params["id"])
-		if err != nil {
-			log.Println("err", err)
-			return
-		}
-		rowsDeleted, err := bookRepo.DeleteBook(db, id)
+		name, _ := params["name"]
+		rowsDeleted, err := bookRepo.DeleteBook(name)
 		v := validator.New()
 
 		if err = v.Struct(book); err != nil {

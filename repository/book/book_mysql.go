@@ -3,19 +3,13 @@ package book
 import (
 	"containerization/driver"
 	"containerization/models"
-	"database/sql"
+	"fmt"
 	"log"
 )
 
 type BookRepository struct{}
 
-const (
-	tableName        = "table:bookmanagement"
-	executionSuccess = "status:success"
-	executionFailure = "status:failed"
-)
-
-func (b BookRepository) GetBooks(db *sql.DB, book models.BookManagement, books []models.BookManagement) ([]models.BookManagement, error) {
+func (b BookRepository) GetBooks(book models.BookManagement, books []models.BookManagement) ([]models.BookManagement, error) {
 	datastore, _ := driver.ConnectDB()
 	result, err := datastore.Db.Query("SELECT id, name, author, prices,available,pagequality,lauchedyear, isbn,stock from bookmanagement")
 	if err != nil {
@@ -31,7 +25,7 @@ func (b BookRepository) GetBooks(db *sql.DB, book models.BookManagement, books [
 	return books, nil
 }
 
-func (b BookRepository) GetBookById(db *sql.DB, book models.BookManagement, id int) (models.BookManagement, error) {
+func (b BookRepository) GetBookById(book models.BookManagement, id int) (models.BookManagement, error) {
 	datastore, _ := driver.ConnectDB()
 	rows := datastore.Db.QueryRow("SELECT id, name, author, prices, available, pagequality, lauchedyear, isbn,stock FROM bookmanagement where id = ?", id)
 	err := rows.Scan(&book.ID, &book.Name, &book.Author, &book.Prices, &book.Available, &book.PageQuality, &book.LaunchedYear, &book.Isbn, &book.Stock)
@@ -39,14 +33,14 @@ func (b BookRepository) GetBookById(db *sql.DB, book models.BookManagement, id i
 	return book, err
 }
 
-func (b BookRepository) GetBookByAuthor(db *sql.DB, book models.BookManagement, author string) (models.BookManagement, error) {
+func (b BookRepository) GetBookByAuthor(book models.BookManagement, author string) (models.BookManagement, error) {
 	datastore, _ := driver.ConnectDB()
 	rows := datastore.Db.QueryRow("SELECT  id,name, author, prices, available, pagequality, lauchedyear, isbn,stock FROM bookmanagement where author = ?", author)
 	err := rows.Scan(&book.ID, &book.Name, &book.Author, &book.Prices, &book.Available, &book.PageQuality, &book.LaunchedYear, &book.Isbn, &book.Stock)
 	return book, err
 }
 
-func (b BookRepository) CreateBook(db *sql.DB, book models.BookManagement) (int, error) {
+func (b BookRepository) CreateBook(book models.BookManagement) (int, error) {
 	datastore, _ := driver.ConnectDB()
 	err := datastore.Db.QueryRow("INSERT INTO bookmanagement(id,name,author,prices,available,pagequality,lauchedyear,isbn,stock) VALUES(?,?,?,?,?,?,?,?,?)", book.ID, book.Name, book.Author, book.Prices, book.Available, book.PageQuality, book.LaunchedYear, book.Isbn, book.Stock)
 	if err == nil {
@@ -55,7 +49,7 @@ func (b BookRepository) CreateBook(db *sql.DB, book models.BookManagement) (int,
 	return book.ID, nil
 }
 
-func (b BookRepository) UpdateBook(db *sql.DB, book models.BookManagement) (int64, error) {
+func (b BookRepository) UpdateBook(book models.BookManagement) (int64, error) {
 	datastore, _ := driver.ConnectDB()
 	result, err := datastore.Db.Exec("UPDATE bookmanagement SET id=?,name =?, author=?,prices=?,available=?,pagequality=?,lauchedyear=?,stock=? WHERE isbn= ?",
 		&book.ID, &book.Name, &book.Author, &book.Prices, &book.Available, &book.PageQuality, &book.LaunchedYear, &book.Stock, &book.Isbn)
@@ -69,15 +63,15 @@ func (b BookRepository) UpdateBook(db *sql.DB, book models.BookManagement) (int6
 	return rowsUpdated, nil
 }
 
-func (b BookRepository) DeleteBook(db *sql.DB, id int) (int64, error) {
+func (b BookRepository) DeleteBook(name string) (string, error) {
 	datastore, _ := driver.ConnectDB()
-	result, err := datastore.Db.Exec("DELETE FROM bookmanagement WHERE id = ?", id)
+	result, err := datastore.Db.Exec("DELETE FROM bookmanagement WHERE name = ?", name)
 	if err != nil {
-		return 0, err
+		fmt.Println("err", err)
 	}
 	rowsDeleted, err := result.RowsAffected()
 	if err != nil {
-		return 0, err
+		fmt.Println("err", err)
 	}
-	return rowsDeleted, nil
+	return string(rowsDeleted), nil
 }
