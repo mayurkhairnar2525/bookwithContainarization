@@ -1,0 +1,9 @@
+db:   #database service
+  drivername : "mysql"
+  username : "root"
+  password : "12345678"
+  host : "0.0.0.0"
+  port : "9999"
+  dbname : "bookcount"
+jwtKey: "secretKey"
+server_address: localhost:9099

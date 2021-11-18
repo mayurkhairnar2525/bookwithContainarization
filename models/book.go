@@ -1,25 +1,13 @@
 package models
 
-import "github.com/dgrijalva/jwt-go"
-
 type BookManagement struct {
 	ID           int    `json:"id" validate:"min=0"`
-	Name         string `json:"name" validator:"nonzero"`
-	Author       string `json:"author" validator:"empty=true | gte=2 & lte=15"`
-	Prices       int    `json:"prices" validator:"nonzero"`
-	Available    string `json:"available" validator:"nonzero"`
-	PageQuality  string `json:"pagequality" validator:"nonzero"`
-	LaunchedYear string `json:"launchedyear" validator:"empty=true | gte=2 & lte=4"`
-	Isbn         string `json:"isbn" validator:"min=21"`
-	Stock        int    `json:"stock" validator:"nonzero"`
-}
-
-type Credentials struct {
-	Username string `json:"username" validate:"required,min=4,max=15"`
-	Password string `json:"password" validate:"required,min=4"`
-}
-
-type Claims struct {
-	Username string `json:"username" validate:"required"`
-	jwt.StandardClaims
+	Name         string `json:"name" validate:"min=0,max=15"`
+	Author       string `json:"author" validate:"min=0,max=15"`
+	Prices       int    `json:"prices" validate:"min=0"`
+	Available    string `json:"available" validate:"min=0,max=15"`
+	PageQuality  string `json:"pagequality" validate:"min=0,max=15"`
+	LaunchedYear string `json:"launchedyear" validate:"min=0,max=15"`
+	Isbn         string `json:"isbn" validate:"min=0,max=15"`
+	Stock        int    `json:"stock" validate:"min=0"`
 }

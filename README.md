@@ -44,3 +44,26 @@ CONTAINER ID   IMAGE                                       COMMAND              
 5. docker push <docker-username>/<docker-hub repo. name>
   - docker push mayurk55/bookwithcontainarization_book-application
 
+..........................................................................................................................
+
+##User
+
+docker run --name mysql-user -p 8999:3306 -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:5.7
+
+container name - mysql-mayur
+port - 8999:3306
+username - root
+password - 12345678
+image - mysql:5.7
+
+
+CREATE TABLE `userstore`.`usermanagement` (
+`username` VARCHAR(45) NULL,
+`password` VARCHAR(45) NOT NULL,
+`firstname` VARCHAR(45) NULL,
+`lastname` VARCHAR(45) NULL,
+`age` INT NULL,
+`gender` VARCHAR(45) NULL,
+`city` VARCHAR(45) NULL,
+`country` VARCHAR(45) NULL,
+`phone` VARCHAR(45) NULL);

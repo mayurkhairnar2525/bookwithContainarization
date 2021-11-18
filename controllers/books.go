@@ -4,6 +4,7 @@ import (
 	"containerization/models"
 	book2 "containerization/repository/book"
 	"containerization/utils"
+	"containerization/validation"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -38,24 +39,24 @@ func (u Controllers) GetBooks() http.HandlerFunc {
 func (u Controllers) CreateBook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book models.BookManagement
-		var bookID int
+		var bookCreate int
 		var error models.Error
 		err := json.NewDecoder(r.Body).Decode(&book)
 
-		v := validator.New()
-		if err = v.Struct(book); err != nil {
-			fmt.Println(err)
+		validationError := validation.ValidateCreateBook(&book)
+		if validationError != nil {
+			validation.DisplayError(w, validationError)
 			return
 		}
 		bookRepo := book2.BookRepository{}
-		bookID, err = bookRepo.CreateBook(book)
+		bookCreate, err = bookRepo.CreateBook(book)
 		if err != nil {
 			error.Message = "Server error"
 			utils.SendError(w, http.StatusInternalServerError, error) //500
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		utils.SendSuccess(w, bookID)
+		utils.SendSuccess(w, bookCreate)
 	}
 }
 

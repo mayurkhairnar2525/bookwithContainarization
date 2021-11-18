@@ -3,11 +3,8 @@ package routers
 import (
 	"containerization/auth"
 	"containerization/controllers"
-	"database/sql"
 	"github.com/gorilla/mux"
 )
-
-var db *sql.DB
 
 func Router(controllers controllers.Controllers) *mux.Router {
 	router := mux.NewRouter()

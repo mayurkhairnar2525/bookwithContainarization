@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"containerization/auth"
+	"containerization/config"
 	"containerization/models"
-	. "containerization/repository/user"
+	users "containerization/repository/user"
 	"containerization/utils"
-	vipers "containerization/viper"
+	"containerization/validation"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
@@ -17,15 +19,18 @@ import (
 )
 
 type Controllers struct {
-	Repository UserRepository
+	Repository users.UserRepository
+	Db         *sql.DB
 }
 
 var userss []models.Person
 
-var JwtKey = vipers.GetJwtKey()
+var JwtKey = config.Config{}
+
+//var JwtKey = config.Config{}
 
 func (u Controllers) Login(w http.ResponseWriter, request *http.Request) {
-	var credentials models.Credentials
+	var credentials auth.Credentials
 	err := json.NewDecoder(request.Body).Decode(&credentials)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -43,7 +48,7 @@ func (u Controllers) Login(w http.ResponseWriter, request *http.Request) {
 	}
 	//expirationTime := time.Now().Add(viper.GetCookieExpiryTime())
 	expirationTime := time.Now().Add(time.Minute * 5)
-	claims := &models.Claims{
+	claims := &auth.Claims{
 		Username: credentials.Username,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
@@ -70,13 +75,12 @@ func (u Controllers) CreateUser() http.HandlerFunc {
 		var userUsername string
 		var error models.Error
 		err := json.NewDecoder(r.Body).Decode(&user)
-
-		v := validator.New()
-		if err = v.Struct(user); err != nil {
-			fmt.Println(err)
+		validationError := validation.ValidateCreateUser(&user) //validate inputs of user and display errors if any
+		if validationError != nil {
+			validation.DisplayError(w, validationError)
 			return
 		}
-		userRepo := UserRepository{}
+		userRepo := users.UserRepository{}
 		userUsername, err = userRepo.CreateUser(user)
 		if err != nil {
 			error.Message = "Server error"
@@ -92,7 +96,7 @@ func (u Controllers) GetUsers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user models.Person
 		userss = []models.Person{}
-		userRepo := UserRepository{}
+		userRepo := users.UserRepository{}
 		users, err := userRepo.GetUsers(user, userss)
 
 		v := validator.New()
@@ -113,7 +117,7 @@ func (u Controllers) DeleteUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user models.Person
 		params := mux.Vars(r)
-		userRepo := UserRepository{}
+		userRepo := users.UserRepository{}
 		username, _ := params["username"]
 		rowsDeleted, err := userRepo.DeleteUser(username)
 		v := validator.New()

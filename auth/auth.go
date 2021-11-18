@@ -1,8 +1,7 @@
 package auth
 
 import (
-	"containerization/models"
-	vipers "containerization/viper"
+	"containerization/config"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
@@ -10,7 +9,17 @@ import (
 
 var tokenStore = make(map[string]string)
 
-var jwtKey = vipers.GetJwtKey()
+type Credentials struct {
+	Username string `json:"username" validate:"required,min=4,max=15"`
+	Password string `json:"password" validate:"required,min=4"`
+}
+
+type Claims struct {
+	Username string `json:"username" validate:"required"`
+	jwt.StandardClaims
+}
+
+var jwtKey = config.GetJwtKey()
 
 var USers = map[string]string{
 	"mayur": "password1",
@@ -25,7 +34,7 @@ func IsAuthorised(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 			return
 		}
 		tokenStr := cookie.Value
-		claims := &models.Claims{}
+		claims := &Claims{}
 		tkn, err := jwt.ParseWithClaims(tokenStr, claims,
 			func(t *jwt.Token) (interface{}, error) {
 				return jwtKey, nil

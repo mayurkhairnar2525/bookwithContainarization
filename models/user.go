@@ -8,6 +8,6 @@ type Person struct {
 	Age       int    `json:"age" validate:"min=0,max=130"`
 	Gender    string `json:"gender" validate:"min=0,max=15"`
 	City      string `json:"city" validate:"min=0,max=15"`
-	Country   string `json:"country,omitempty"`
+	Country   string `json:"country" validate:"min=0"`
 	Phone     string `json:"phone" validate:"min=0,max=10"`
 }
