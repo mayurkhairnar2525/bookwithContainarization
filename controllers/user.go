@@ -9,6 +9,7 @@ import (
 	"containerization/validation"
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-playground/validator/v10"
@@ -23,11 +24,9 @@ type Controllers struct {
 	Db         *sql.DB
 }
 
+var ConfigFile = flag.String("config", "config/config.yaml", "Config File")
 var userss []models.Person
-
-var JwtKey = config.Config{}
-
-//var JwtKey = config.Config{}
+var JwtKey = config.GetJwtKey()
 
 func (u Controllers) Login(w http.ResponseWriter, request *http.Request) {
 	var credentials auth.Credentials
@@ -46,7 +45,11 @@ func (u Controllers) Login(w http.ResponseWriter, request *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	//expirationTime := time.Now().Add(viper.GetCookieExpiryTime())
+	cfg, err := config.LoadConfigFromFile(*ConfigFile)
+	if err != nil {
+		log.Fatalf("Failed to load config: %+v\n", err.Error())
+	}
+	fmt.Println("Fetching the Configs", cfg)
 	expirationTime := time.Now().Add(time.Minute * 5)
 	claims := &auth.Claims{
 		Username: credentials.Username,

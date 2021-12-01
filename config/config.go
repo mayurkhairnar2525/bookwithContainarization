@@ -24,10 +24,6 @@ type DbConfig struct {
 	Dbname     string `yaml:"dbname"`
 }
 
-//type Key struct {
-//	JWTKey string `yaml:"jwtKey"`
-//}
-
 func LoadConfigFromFile(FileName string) (*Config, error) {
 	fileData, err := ioutil.ReadFile(FileName)
 	if err != nil {

@@ -75,3 +75,114 @@ Docker:
 1. The build command will generate a binary but when the container is created, this application will not start as the CMD is for a different binary.
 Either specify the binary during building it in the Dockerfile, or use the generic golang binary.
 This will NOT create the application image.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package config
+
+import (
+	"errors"
+	"fmt"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+)
+
+type Config struct {
+	ServerAddr string `yaml:"server_address"`
+	AppName    string `yaml:"app_name"`
+	DBConfig DbConfig `yaml:"db_config"`
+}
+
+type DbConfig struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	DbName string `yaml:"db"`
+}
+
+func LoadConfigFromFile(fileName string) (*Config, error) {
+	fileData, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Read config file error: %+v", err.Error()))
+	}
+	cfgData := &Config{}
+	err = yaml.Unmarshal(fileData, cfgData)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Config file unmarshall error: %+v", err.Error()))
+	}
+	fmt.Printf("%+v\n", cfgData)
+	return cfgData, nil
+}
+
+---
+Filename: server-cfg.yaml
+server_address: localhost:10000
+app_name: prometheus_grafana_expt
+db_config:
+  username: test-mayur
+  password: rohit-pass
+  db: users
+
+---
+
+package main
+
+import (
+	"flag"
+	"github.com/PereRohit/prometheus_graphana/config"
+	"github.com/PereRohit/prometheus_graphana/handlers"
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
+	"net/http"
+)
+
+
+// here flag is used, can use viper, cobra, etc.
+var configFile = flag.String("config", "config/server-cfg.yaml", "Server Config File")
+
+func main() {
+	flag.Parse()
+
+	router := mux.NewRouter()
+
+	// expose prometheus metrics endpoint
+	router.Handle("/metrics", promhttp.Handler())
+
+	// fetch config
+	cfg, err := config.LoadConfigFromFile(*configFile)
+	if err != nil{
+		log.Fatalf("Failed to load config: %+v\n", err.Error())
+	}
+
+	middleWareHandler := handlers.NewMiddleware(cfg)
+
+	// add custom routes
+	helloHandler := handlers.NewHelloHandler(cfg)
+	router.Use(middleWareHandler.CollectMetrics)
+	router.HandleFunc("/say-hello", helloHandler.SayHello)
+
+	log.Println("Server started...")
+	log.Println(http.ListenAndServe(cfg.ServerAddr, router))
+}
+
+
+

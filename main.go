@@ -12,9 +12,8 @@ import (
 	"net/http"
 )
 
-var configFile = flag.String("config", "config/config.yaml", "Config File")
-
 func main() {
+	flag.Parse()
 	db, err := driver.ConnectDB()
 	if err != nil {
 		log.Fatal("not able connect with server database: application terminated")
@@ -22,7 +21,7 @@ func main() {
 	log.Println("Db connected", db)
 
 	// fetching the config's
-	cfg, err := config.LoadConfigFromFile(*configFile)
+	cfg, err := config.LoadConfigFromFile(*controllers.ConfigFile)
 	if err != nil {
 		log.Fatalf("Failed to load config: %+v\n", err.Error())
 	}

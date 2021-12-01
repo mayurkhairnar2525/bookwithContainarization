@@ -50,7 +50,7 @@ CONTAINER ID   IMAGE                                       COMMAND              
 
 docker run --name mysql-user -p 8999:3306 -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:5.7
 
-container name - mysql-mayur
+container name - mysql-user
 port - 8999:3306
 username - root
 password - 12345678
